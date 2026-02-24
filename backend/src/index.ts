@@ -141,33 +141,62 @@ ${message ? `追加条件: ${message}` : ''}
     let parsedRoute = null
     let reasoning = ''
 
-    // ツール結果から直接ルートを取得（最も信頼性が高い）
+    // ツール結果からルート候補を取得
     const routeSearchResult = response.toolResults.find(t => t.name === 'route_search')
-    if (routeSearchResult) {
-      const result = routeSearchResult.result as { routes?: Array<{ summary: string; distance: unknown; duration: unknown; polyline: string }> }
-      if (result.routes && result.routes.length > 0) {
-        // 最初のルートを使用（AIが選択したものがあればそれを使う）
-        parsedRoute = result.routes[0]
+    const routeResult = routeSearchResult?.result as { routes?: Array<{ summary: string; distance: unknown; duration: unknown; polyline: string }> } | undefined
+    const availableRoutes = routeResult?.routes || []
+
+    // AIの応答からreasoning抽出（複数パターン対応）
+    // 1. 「理由」「選択理由」などのキーワード後のテキスト
+    const reasoningPatterns = [
+      /理由[：:]\s*(.+?)(?:\n\n|```|$)/s,
+      /reasoning[："]\s*[「"]?(.+?)[」"]?(?:\n|```|$)/si,
+      /選択理由[：:]\s*(.+?)(?:\n\n|```|$)/s,
+      /\*\*理由\*\*[：:]?\s*(.+?)(?:\n\n|```|$)/s,
+    ]
+
+    for (const pattern of reasoningPatterns) {
+      const match = response.message.match(pattern)
+      if (match) {
+        reasoning = match[1].trim()
+        break
       }
     }
 
-    // AIの説明からreasoningを抽出
+    // AIが選択したルートを特定
+    if (availableRoutes.length > 0) {
+      // デフォルトは最初のルート
+      parsedRoute = availableRoutes[0]
+
+      // AIの応答からルート番号やサマリーを探す
+      const routeNumberMatch = response.message.match(/(\d+)番目|ルート(\d+)|Route\s*(\d+)/i)
+      if (routeNumberMatch) {
+        const num = parseInt(routeNumberMatch[1] || routeNumberMatch[2] || routeNumberMatch[3]) - 1
+        if (num >= 0 && num < availableRoutes.length) {
+          parsedRoute = availableRoutes[num]
+        }
+      } else {
+        // サマリー名でマッチング
+        for (const route of availableRoutes) {
+          if (response.message.includes(route.summary)) {
+            parsedRoute = route
+            break
+          }
+        }
+      }
+    }
+
+    // JSONブロックからも抽出を試みる（補完用）
     try {
       const codeBlockMatch = response.message.match(/```(?:json)?\s*([\s\S]*?)```/)
       if (codeBlockMatch) {
         const parsed = JSON.parse(codeBlockMatch[1].trim())
-        reasoning = parsed.reasoning || ''
-        // AIが特定のルートを選択していれば、そのインデックスを取得
-        if (parsed.route?.summary && routeSearchResult) {
-          const result = routeSearchResult.result as { routes?: Array<{ summary: string }> }
-          const selectedIndex = result.routes?.findIndex(r => r.summary === parsed.route.summary)
-          if (selectedIndex !== undefined && selectedIndex >= 0 && result.routes) {
-            parsedRoute = result.routes[selectedIndex]
-          }
+        if (!reasoning && parsed.reasoning) {
+          reasoning = parsed.reasoning
         }
       }
     } catch {
-      // reasoningの抽出に失敗しても、ルートはツール結果から取得済み
+      // パース失敗しても続行
     }
 
     res.json({
