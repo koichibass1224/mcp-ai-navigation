@@ -14,7 +14,13 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    process.env.CORS_ORIGIN,
+    /\.vercel\.app$/,
+  ].filter(Boolean) as (string | RegExp)[],
 }))
 app.use(express.json())
 
