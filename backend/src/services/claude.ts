@@ -28,9 +28,15 @@ export interface ToolCall {
   reason: string
 }
 
+export interface ToolResult {
+  name: string
+  result: unknown
+}
+
 export interface ClaudeResponse {
   message: string
   toolsUsed: ToolCall[]
+  toolResults: ToolResult[]
   rawResponse: unknown
 }
 
@@ -63,6 +69,7 @@ class ClaudeService {
     const client = this.getClient()
     const tools = this.convertToolsToAnthropicFormat()
     const toolsUsed: ToolCall[] = []
+    const collectedToolResults: ToolResult[] = []
 
     const messages: Anthropic.MessageParam[] = [
       ...conversationHistory,
@@ -99,6 +106,10 @@ class ClaudeService {
               toolUse.name,
               toolUse.input as Record<string, unknown>
             )
+            collectedToolResults.push({
+              name: toolUse.name,
+              result,
+            })
             toolResults.push({
               type: 'tool_result',
               tool_use_id: toolUse.id,
@@ -135,6 +146,7 @@ class ClaudeService {
       return {
         message,
         toolsUsed,
+        toolResults: collectedToolResults,
         rawResponse: response,
       }
     } catch (error) {

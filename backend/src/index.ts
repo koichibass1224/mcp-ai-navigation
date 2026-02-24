@@ -141,15 +141,33 @@ ${message ? `追加条件: ${message}` : ''}
     let parsedRoute = null
     let reasoning = ''
 
+    // ツール結果から直接ルートを取得（最も信頼性が高い）
+    const routeSearchResult = response.toolResults.find(t => t.name === 'route_search')
+    if (routeSearchResult) {
+      const result = routeSearchResult.result as { routes?: Array<{ summary: string; distance: unknown; duration: unknown; polyline: string }> }
+      if (result.routes && result.routes.length > 0) {
+        // 最初のルートを使用（AIが選択したものがあればそれを使う）
+        parsedRoute = result.routes[0]
+      }
+    }
+
+    // AIの説明からreasoningを抽出
     try {
-      const jsonMatch = response.message.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0])
-        parsedRoute = parsed.route || parsed.selectedRoute
+      const codeBlockMatch = response.message.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (codeBlockMatch) {
+        const parsed = JSON.parse(codeBlockMatch[1].trim())
         reasoning = parsed.reasoning || ''
+        // AIが特定のルートを選択していれば、そのインデックスを取得
+        if (parsed.route?.summary && routeSearchResult) {
+          const result = routeSearchResult.result as { routes?: Array<{ summary: string }> }
+          const selectedIndex = result.routes?.findIndex(r => r.summary === parsed.route.summary)
+          if (selectedIndex !== undefined && selectedIndex >= 0 && result.routes) {
+            parsedRoute = result.routes[selectedIndex]
+          }
+        }
       }
     } catch {
-      console.log('JSON parse failed, using raw response')
+      // reasoningの抽出に失敗しても、ルートはツール結果から取得済み
     }
 
     res.json({
