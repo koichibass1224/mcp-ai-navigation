@@ -52,6 +52,20 @@ export const routeSearchTool: McpTool = {
       traffic_model: args.traffic_model as RouteSearchParams['traffic_model'],
     }
 
-    return searchRoute(params)
+    const result = await searchRoute(params)
+
+    // AIへのトークン節約: stepsを除外した軽量版を返す
+    return {
+      routes: result.routes.map((route) => ({
+        summary: route.summary,
+        distance: route.distance,
+        duration: route.duration,
+        duration_in_traffic: route.duration_in_traffic,
+        polyline: route.polyline,
+        warnings: route.warnings,
+        // steps は除外（約60%のトークン削減）
+      })),
+      geocoded_waypoints: result.geocoded_waypoints,
+    }
   },
 }
