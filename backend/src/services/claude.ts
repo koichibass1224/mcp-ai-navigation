@@ -86,7 +86,7 @@ class ClaudeService {
     try {
       let response = await client.messages.create({
         model: modelId,
-        max_tokens: 1024,
+        max_tokens: 2048,
         system: SYSTEM_PROMPT,
         tools: tools.length > 0 ? tools : undefined,
         messages,
@@ -138,7 +138,7 @@ class ClaudeService {
 
         response = await client.messages.create({
           model: modelId,
-          max_tokens: 1024,
+          max_tokens: 2048,
           system: SYSTEM_PROMPT,
           tools: tools.length > 0 ? tools : undefined,
           messages,
