@@ -78,7 +78,7 @@ class ClaudeService {
 
     try {
       let response = await client.messages.create({
-        model: 'claude-3-5-haiku-20241022',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
         tools: tools.length > 0 ? tools : undefined,
@@ -126,7 +126,7 @@ class ClaudeService {
         messages.push({ role: 'user', content: toolResults })
 
         response = await client.messages.create({
-          model: 'claude-3-5-haiku-20241022',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
           tools: tools.length > 0 ? tools : undefined,
