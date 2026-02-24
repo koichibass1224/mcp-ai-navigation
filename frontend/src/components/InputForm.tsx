@@ -26,6 +26,7 @@ export function InputForm({ mode, onSubmit, isLoading }: InputFormProps) {
   const [message, setMessage] = useState('')
   const [travelMode, setTravelMode] = useState<TravelMode>('driving')
   const [routeType, setRouteType] = useState<RouteType>('default')
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -81,60 +82,84 @@ export function InputForm({ mode, onSubmit, isLoading }: InputFormProps) {
         />
       </div>
 
-      {/* 移動手段 */}
-      <div className="space-y-2">
-        <label className="text-sm text-white/60">移動手段</label>
-        <div className="flex gap-2">
-          {travelModeOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              disabled={isLoading}
-              onClick={() => setTravelMode(option.value)}
-              className={`
-                flex-1 py-2 px-3 rounded-lg text-sm font-medium
-                transition-all flex items-center justify-center gap-1.5
-                ${travelMode === option.value
-                  ? 'bg-apple-blue text-white'
-                  : 'bg-elevated text-white/60 hover:text-white border border-separator'
-                }
-                disabled:opacity-50
-              `}
-            >
-              <span>{option.icon}</span>
-              <span>{option.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* オプション（アコーディオン） */}
+      <div className="border border-separator rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setIsOptionsOpen(!isOptionsOpen)}
+          className="w-full px-4 py-3 flex items-center justify-between bg-elevated hover:bg-elevated/80 transition-colors"
+        >
+          <span className="text-sm text-white/60 flex items-center gap-2">
+            <span>オプション</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-surface text-white/40">
+              {travelModeOptions.find(o => o.value === travelMode)?.icon} {travelModeOptions.find(o => o.value === travelMode)?.label}
+              {travelMode === 'driving' && ` · ${routeTypeOptions.find(o => o.value === routeType)?.label}`}
+            </span>
+          </span>
+          <span className={`text-white/40 transition-transform ${isOptionsOpen ? 'rotate-180' : ''}`}>
+            ▼
+          </span>
+        </button>
 
-      {/* 道路タイプ（車のときのみ表示） */}
-      {travelMode === 'driving' && (
-        <div className="space-y-2">
-          <label className="text-sm text-white/60">道路タイプ</label>
-          <div className="flex gap-2">
-            {routeTypeOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                disabled={isLoading}
-                onClick={() => setRouteType(option.value)}
-                className={`
-                  flex-1 py-2 px-3 rounded-lg text-sm font-medium
-                  transition-all
-                  ${routeType === option.value
-                    ? 'bg-apple-cyan text-black'
-                    : 'bg-elevated text-white/60 hover:text-white border border-separator'
-                  }
-                  disabled:opacity-50
-                `}
-              >
-                {option.label}
-              </button>
-            ))}
+        {isOptionsOpen && (
+          <div className="px-4 py-3 space-y-4 bg-surface border-t border-separator">
+            {/* 移動手段 */}
+            <div className="space-y-2">
+              <label className="text-sm text-white/60">移動手段</label>
+              <div className="flex gap-2">
+                {travelModeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => setTravelMode(option.value)}
+                    className={`
+                      flex-1 py-2 px-3 rounded-lg text-sm font-medium
+                      transition-all flex items-center justify-center gap-1.5
+                      ${travelMode === option.value
+                        ? 'bg-apple-blue text-white'
+                        : 'bg-elevated text-white/60 hover:text-white border border-separator'
+                      }
+                      disabled:opacity-50
+                    `}
+                  >
+                    <span>{option.icon}</span>
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 道路タイプ（車のときのみ表示） */}
+            {travelMode === 'driving' && (
+              <div className="space-y-2">
+                <label className="text-sm text-white/60">道路タイプ</label>
+                <div className="flex gap-2">
+                  {routeTypeOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => setRouteType(option.value)}
+                      className={`
+                        flex-1 py-2 px-3 rounded-lg text-sm font-medium
+                        transition-all
+                        ${routeType === option.value
+                          ? 'bg-apple-cyan text-black'
+                          : 'bg-elevated text-white/60 hover:text-white border border-separator'
+                        }
+                        disabled:opacity-50
+                      `}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 自然文条件（AIモードのみ） */}
       <div className="space-y-1">
