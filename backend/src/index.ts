@@ -147,21 +147,19 @@ ${message ? `追加条件: ${message}` : ''}
     const routeResult = routeSearchResult?.result as { routes?: Array<{ summary: string; distance: unknown; duration: unknown; polyline: string }> } | undefined
     const availableRoutes = routeResult?.routes || []
 
-    // AIの応答からreasoning抽出（複数パターン対応）
-    // 1. 「理由」「選択理由」などのキーワード後のテキスト
-    const reasoningPatterns = [
-      /理由[：:]\s*(.+?)(?:\n\n|```|$)/s,
-      /reasoning[："]\s*[「"]?(.+?)[」"]?(?:\n|```|$)/si,
-      /選択理由[：:]\s*(.+?)(?:\n\n|```|$)/s,
-      /\*\*理由\*\*[：:]?\s*(.+?)(?:\n\n|```|$)/s,
-    ]
+    // AIの応答からreasoning抽出
+    // コードブロック以外のテキスト部分を全て取得
+    const messageWithoutCodeBlock = response.message
+      .replace(/```[\s\S]*?```/g, '')  // コードブロック除去
+      .trim()
 
-    for (const pattern of reasoningPatterns) {
-      const match = response.message.match(pattern)
-      if (match) {
-        reasoning = match[1].trim()
-        break
-      }
+    // 選択理由のキーワード以降を取得、なければ全文を使用
+    const reasoningMatch = messageWithoutCodeBlock.match(/(?:選択理由|理由)[：:]\s*([\s\S]*)/i)
+    if (reasoningMatch) {
+      reasoning = reasoningMatch[1].trim()
+    } else {
+      // キーワードがなければ、コードブロック除去後の全文を使用
+      reasoning = messageWithoutCodeBlock
     }
 
     // AIが選択したルートを特定
