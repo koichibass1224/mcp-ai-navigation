@@ -51,6 +51,7 @@ export interface NavigateRequest {
   message: string
   travelMode: 'driving' | 'walking' | 'bicycling'
   routeType: 'default' | 'avoid_highways' | 'avoid_tolls'
+  model?: 'sonnet' | 'haiku'
 }
 
 export interface NavigateResponse {

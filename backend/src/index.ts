@@ -93,6 +93,7 @@ interface NavigateRequest {
   message: string
   travelMode?: 'driving' | 'walking' | 'bicycling'
   routeType?: 'default' | 'avoid_highways' | 'avoid_tolls'
+  model?: 'sonnet' | 'haiku'
 }
 
 const travelModeLabels: Record<string, string> = {
@@ -108,7 +109,7 @@ const routeTypeLabels: Record<string, string> = {
 }
 
 app.post('/api/navigate', async (req, res) => {
-  const { origin, destination, message, travelMode, routeType } = req.body as NavigateRequest
+  const { origin, destination, message, travelMode, routeType, model } = req.body as NavigateRequest
 
   if (!origin || !destination) {
     res.status(400).json({ error: '出発地と目的地は必須です' })
@@ -136,7 +137,7 @@ ${message ? `追加条件: ${message}` : ''}
 `.trim()
 
   try {
-    const response = await claudeService.sendMessage(userMessage)
+    const response = await claudeService.sendMessage(userMessage, [], model)
 
     let parsedRoute = null
     let reasoning = ''

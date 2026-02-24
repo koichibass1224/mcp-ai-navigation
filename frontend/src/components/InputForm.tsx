@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { NavigateRequest, TravelMode, RouteType } from '../types'
+import { NavigateRequest, TravelMode, RouteType, AIModel } from '../types'
 import { SearchMode } from './ModeToggle'
 
 interface InputFormProps {
@@ -20,12 +20,18 @@ const routeTypeOptions: { value: RouteType; label: string }[] = [
   { value: 'avoid_tolls', label: '無料道路' },
 ]
 
+const modelOptions: { value: AIModel; label: string; description: string }[] = [
+  { value: 'sonnet', label: 'Sonnet', description: '高精度（遅い・高コスト）' },
+  { value: 'haiku', label: 'Haiku', description: '高速（安い）' },
+]
+
 export function InputForm({ mode, onSubmit, isLoading }: InputFormProps) {
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
   const [message, setMessage] = useState('')
   const [travelMode, setTravelMode] = useState<TravelMode>('driving')
   const [routeType, setRouteType] = useState<RouteType>('default')
+  const [model, setModel] = useState<AIModel>('sonnet')
   const [isOptionsOpen, setIsOptionsOpen] = useState(false)
 
   const handleSubmit = (e: FormEvent) => {
@@ -37,6 +43,7 @@ export function InputForm({ mode, onSubmit, isLoading }: InputFormProps) {
       message: mode === 'ai' ? message : '',
       travelMode,
       routeType,
+      model: mode === 'ai' ? model : undefined,
     })
   }
 
@@ -160,6 +167,35 @@ export function InputForm({ mode, onSubmit, isLoading }: InputFormProps) {
           </div>
         )}
       </div>
+
+      {/* AIモデル選択（AIモードのみ） */}
+      {isAiMode && (
+        <div className="space-y-2">
+          <label className="text-sm text-apple-purple">AIモデル</label>
+          <div className="flex gap-2">
+            {modelOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                disabled={isLoading}
+                onClick={() => setModel(option.value)}
+                className={`
+                  flex-1 py-2 px-3 rounded-lg text-sm
+                  transition-all flex flex-col items-center
+                  ${model === option.value
+                    ? 'bg-apple-purple text-white'
+                    : 'bg-elevated text-white/60 hover:text-white border border-separator'
+                  }
+                  disabled:opacity-50
+                `}
+              >
+                <span className="font-medium">{option.label}</span>
+                <span className="text-xs opacity-70">{option.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 自然文条件（AIモードのみ） */}
       <div className="space-y-1">

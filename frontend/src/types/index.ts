@@ -1,5 +1,6 @@
 export type TravelMode = 'driving' | 'walking' | 'bicycling'
 export type RouteType = 'default' | 'avoid_highways' | 'avoid_tolls'
+export type AIModel = 'sonnet' | 'haiku'
 
 export interface NavigateRequest {
   origin: string
@@ -7,6 +8,7 @@ export interface NavigateRequest {
   message: string
   travelMode: TravelMode
   routeType: RouteType
+  model?: AIModel
 }
 
 export interface LatLng {

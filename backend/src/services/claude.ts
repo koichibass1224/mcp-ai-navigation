@@ -59,14 +59,24 @@ class ClaudeService {
     }))
   }
 
+  private getModelId(model?: 'sonnet' | 'haiku'): string {
+    const models = {
+      sonnet: 'claude-sonnet-4-20250514',
+      haiku: 'claude-haiku-4-5-20251001',
+    }
+    return models[model ?? 'haiku']
+  }
+
   async sendMessage(
     userMessage: string,
-    conversationHistory: Anthropic.MessageParam[] = []
+    conversationHistory: Anthropic.MessageParam[] = [],
+    model?: 'sonnet' | 'haiku'
   ): Promise<ClaudeResponse> {
     const client = this.getClient()
     const tools = this.convertToolsToAnthropicFormat()
     const toolsUsed: ToolCall[] = []
     const collectedToolResults: ToolResult[] = []
+    const modelId = this.getModelId(model)
 
     const messages: Anthropic.MessageParam[] = [
       ...conversationHistory,
@@ -75,7 +85,7 @@ class ClaudeService {
 
     try {
       let response = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: modelId,
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
         tools: tools.length > 0 ? tools : undefined,
@@ -127,7 +137,7 @@ class ClaudeService {
         messages.push({ role: 'user', content: toolResults })
 
         response = await client.messages.create({
-          model: 'claude-haiku-4-5-20251001',
+          model: modelId,
           max_tokens: 1024,
           system: SYSTEM_PROMPT,
           tools: tools.length > 0 ? tools : undefined,
