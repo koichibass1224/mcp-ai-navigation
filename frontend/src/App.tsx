@@ -49,10 +49,7 @@ function App() {
       let response: NavigateResponse
 
       if (mode === 'normal') {
-        response = await searchRouteNormal({
-          origin: data.origin,
-          destination: data.destination,
-        })
+        response = await searchRouteNormal(data)
       } else {
         response = await navigate(data)
       }

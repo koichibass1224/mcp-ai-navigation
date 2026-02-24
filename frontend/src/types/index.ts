@@ -1,7 +1,12 @@
+export type TravelMode = 'driving' | 'walking' | 'bicycling'
+export type RouteType = 'default' | 'avoid_highways' | 'avoid_tolls'
+
 export interface NavigateRequest {
   origin: string
   destination: string
   message: string
+  travelMode: TravelMode
+  routeType: RouteType
 }
 
 export interface LatLng {

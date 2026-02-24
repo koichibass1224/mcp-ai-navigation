@@ -2,9 +2,12 @@ import { Client, TravelMode, TrafficModel, TravelRestriction, Language } from '@
 
 const client = new Client({})
 
+export type TravelModeType = 'driving' | 'walking' | 'bicycling'
+
 export interface RouteSearchParams {
   origin: string
   destination: string
+  mode?: TravelModeType
   avoid?: ('tolls' | 'highways' | 'ferries')[]
   alternatives?: boolean
   departure_time?: string
@@ -62,12 +65,18 @@ export async function searchRoute(params: RouteSearchParams): Promise<Directions
 
   const avoidRestrictions = params.avoid?.map((a) => avoidMap[a])
 
+  const travelModeMap: Record<string, TravelMode> = {
+    'driving': TravelMode.driving,
+    'walking': TravelMode.walking,
+    'bicycling': TravelMode.bicycling,
+  }
+
   try {
     const response = await client.directions({
       params: {
         origin: params.origin,
         destination: params.destination,
-        mode: TravelMode.driving,
+        mode: travelModeMap[params.mode ?? 'driving'],
         avoid: avoidRestrictions,
         alternatives: params.alternatives ?? false,
         departure_time: departureTime,

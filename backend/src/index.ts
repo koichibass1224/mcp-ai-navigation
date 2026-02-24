@@ -37,19 +37,30 @@ app.get('/api/health', (_req, res) => {
 interface RouteRequest {
   origin: string
   destination: string
+  travelMode?: 'driving' | 'walking' | 'bicycling'
+  routeType?: 'default' | 'avoid_highways' | 'avoid_tolls'
 }
 
 // 通常モード: Google Maps API直接呼び出し（AI判断なし）
 app.post('/api/route', async (req, res) => {
-  const { origin, destination } = req.body as RouteRequest
+  const { origin, destination, travelMode, routeType } = req.body as RouteRequest
 
   if (!origin || !destination) {
     res.status(400).json({ error: '出発地と目的地は必須です' })
     return
   }
 
+  const avoid: ('tolls' | 'highways')[] = []
+  if (routeType === 'avoid_highways') avoid.push('highways')
+  if (routeType === 'avoid_tolls') avoid.push('tolls')
+
   try {
-    const result = await searchRoute({ origin, destination })
+    const result = await searchRoute({
+      origin,
+      destination,
+      mode: travelMode,
+      avoid: avoid.length > 0 ? avoid : undefined,
+    })
     const route = result.routes[0]
 
     if (!route) {
@@ -80,10 +91,24 @@ interface NavigateRequest {
   origin: string
   destination: string
   message: string
+  travelMode?: 'driving' | 'walking' | 'bicycling'
+  routeType?: 'default' | 'avoid_highways' | 'avoid_tolls'
+}
+
+const travelModeLabels: Record<string, string> = {
+  'driving': '車',
+  'walking': '徒歩',
+  'bicycling': '自転車',
+}
+
+const routeTypeLabels: Record<string, string> = {
+  'default': '最適ルート',
+  'avoid_highways': '下道優先（高速回避）',
+  'avoid_tolls': '無料道路優先（有料回避）',
 }
 
 app.post('/api/navigate', async (req, res) => {
-  const { origin, destination, message } = req.body as NavigateRequest
+  const { origin, destination, message, travelMode, routeType } = req.body as NavigateRequest
 
   if (!origin || !destination) {
     res.status(400).json({ error: '出発地と目的地は必須です' })
@@ -93,7 +118,9 @@ app.post('/api/navigate', async (req, res) => {
   const userMessage = `
 出発地: ${origin}
 目的地: ${destination}
-${message ? `条件: ${message}` : ''}
+移動手段: ${travelModeLabels[travelMode ?? 'driving']}
+道路タイプ: ${routeTypeLabels[routeType ?? 'default']}
+${message ? `追加条件: ${message}` : ''}
 
 上記の条件でルート検索を行い、最適なルートを1つ選んでください。
 結果は以下のJSON形式で返してください:

@@ -49,6 +49,8 @@ export interface NavigateRequest {
   origin: string
   destination: string
   message: string
+  travelMode: 'driving' | 'walking' | 'bicycling'
+  routeType: 'default' | 'avoid_highways' | 'avoid_tolls'
 }
 
 export interface NavigateResponse {
@@ -74,7 +76,7 @@ export async function navigate(data: NavigateRequest): Promise<NavigateResponse>
 }
 
 // 通常モード: AI判断なしの直接ルート検索
-export async function searchRouteNormal(data: { origin: string; destination: string }): Promise<NavigateResponse> {
+export async function searchRouteNormal(data: NavigateRequest): Promise<NavigateResponse> {
   return fetchApi<NavigateResponse>('/api/route', {
     method: 'POST',
     body: JSON.stringify(data),
