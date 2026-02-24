@@ -6,7 +6,13 @@
       "Bash(timeout 5 npm run dev:*)",
       "Bash(lsof:*)",
       "Bash(curl:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
